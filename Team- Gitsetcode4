@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Personalized Skill Tracker with Progress Chart</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+  #app {
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+  }
+  h1, h2 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .hidden {
+    display: none;
+  }
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #eee;
+  }
+  input[type="text"], input[type="date"], select, input[type="number"] {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+  }
+  input[type="number"]::-webkit-inner-spin-button, 
+  input[type="number"]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+  }
+  button {
+    width: 100%;
+    background: #5a47ab;
+    color: white;
+    padding: 0.85rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    box-shadow: 0 4px 6px rgba(90,71,171,0.6);
+  }
+  button:hover {
+    background: #3f2e7a;
+  }
+  #dashboard-section {
+    margin-top: 2rem;
+  }
+  .entry-group {
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.25);
+    padding-bottom: 0.5rem;
+  }
+  .entry-date {
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    font-size: 1.1rem;
+    color: #ffdd59;
+  }
+  .skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .skill-chip {
+    background: #392f5a;
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #bb86fc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .hours-badge {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.1rem 0.5rem;
+    border-radius: 12px;
+    box-shadow: inset 0 0 6px #9b82ff88;
+  }
+  .coding {
+    background: #4bc0c0; /* Color for Coding */
+    color: #fff;
+  }
+  .designing {
+    background: #ff6384; /* Color for Designing */
+    color: #fff;
+  }
+  .writing {
+    background: #ff9f40; /* Color for Writing */
+    color: #fff;
+  }
+  #error-msg {
+    color: #ff6b6b;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  #welcome-msg {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: #f8f4ff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  #logout-btn {
+    background: #ca3e47;
+    margin-top: 0.5rem;
+  }
+  #logout-btn:hover {
+    background: #9e2b31;
+  }
+  #chart-container {
+    margin-top: 2rem;
+    text-align: center;
+  }
+  canvas {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  @media (max-width: 560px) {
+    #app {
+      padding: 1.5rem 1.8rem;
+    }
+    .skill-chip {
+      font-size: 0.85rem;
+      padding: 0.3rem 0.7rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <!-- Login Section -->
+    <section id="login-section">
+      <h1>Welcome to Skill Tracker</h1>
+      <form id="login-form" autocomplete="off">
+        <label for="user-name">Enter Your Name</label>
+        <input type="text" id="user-name" name="user-name" required autocomplete="off" placeholder="Your Name" />
+        <button type="submit">Login</button>
+      </form>
+    </section>
+
+    <!-- Tracker Section -->
+    <section id="tracker-section" class="hidden" aria-label="Skill Tracker">
+      <div id="welcome-msg"></div>
+      <form id="skill-form" autocomplete="off">
+        <label for="skill-date">Select Date</label>
+        <input type="date" id="skill-date" name="skill-date" required max="" />
+
+        <label for="skill-category">Select Skill Category</label>
+        <select id="skill-category" name="skill-category" required>
+          <option value="" disabled selected>Choose a skill category</option>
+          <option value="Coding">Coding</option>
+          <option value="Designing">Designing</option>
+          <option value="Writing">Writing</option>
+        </select>
+
+        <label for="skill-hours">Hours worked</label>
+        <input type="number" id="skill-hours" name="skill-hours" min="1" max="18" step="0.25" placeholder="e.g. 1.5" required />
+
+        <div id="error-msg" role="alert" aria-live="assertive"></div>
+
+        <button type="submit">Add Skill Entry</button>
+      </form>
+
+      <button id="logout-btn" aria-label="Log out">Logout</button>
+
+      <section id="dashboard-section" aria-label="Dashboard showing skill entries">
+        <h2>Your Skill Dashboard</h2>
+        <div id="entries-container">
+          <p style="text-align:center; color:#ddd;">No skill entries yet. Add some above!</p>
+        </div>
+      </section>
+
+      <div id="chart-container">
+        <h2>Progress Chart</h2>
+        <canvas id="progressChart" width="400" height="200"></canvas>
+      </div>
+    </section>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  (function() {
+    const loginSection = document.getElementById('login-section');
+    const trackerSection = document.getElementById('tracker-section');
+    const loginForm = document.getElementById('login-form');
+    const skillForm = document.getElementById('skill-form');
+    const userNameInput = document.getElementById('user-name');
+    const welcomeMsg = document.getElementById('welcome-msg');
+    const logoutBtn = document.getElementById('logout-btn');
+    const dateInput = document.getElementById('skill-date');
+    const categorySelect = document.getElementById('skill-category');
+    const hoursInput = document.getElementById('skill-hours');
+    const entriesContainer = document.getElementById('entries-container');
+    const errorMsg = document.getElementById('error-msg');
+    const progressChart = document.getElementById('progressChart');
+
+    let currentUser      = null;
+    const MAX_HOURS_PER_DAY = 18;
+    const MIN_HOURS_PER_WEEK = 1;
+    const MAX_HOURS_PER_WEEK = 126;
+    const MILESTONE_HOURS = 20;
+
+    // Helper: Key for localStorage based on username
+    function storageKey(username) {
+      return `skillTracker_${username.toLowerCase()}`;
+    }
+
+    // Save entries for current user
+    function saveEntries(entries) {
+      if (!currentUser     ) return;
+      localStorage.setItem(storageKey(currentUser     ), JSON.stringify(entries));
+    }
+
+    // Load entries for current user
+    function loadEntries() {
+      if (!currentUser     ) return [];
+      const data = localStorage.getItem(storageKey(currentUser     ));
+      try {
+        return data ? JSON.parse(data) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    // Group entries by date and skill, summing hours
+    function groupEntries(entries) {
+      const grouped = {};
+      entries.forEach(({ date, skill, hours }) => {
+        if (!grouped[date]) {
+          grouped[date] = {};
+        }
+        if (!grouped[date][skill]) {
+          grouped[date][skill] = 0;
+        }
+        grouped[date][skill] += hours;
+      });
+      return grouped;
+    }
+
+    // Format date string yyyy-mm-dd to nicer format
+    function formatDate(dateStr) {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      const dt = new Date(dateStr + "T00:00:00");
+      if (isNaN(dt)) return dateStr;
+      return dt.toLocaleDateString(undefined, options);
+    }
+
+    // Render dashboard entries
+    function renderEntries() {
+      const entries = loadEntries();
+      if (entries.length === 0) {
+        entriesContainer.innerHTML = '<p style="text-align:center; color:#ddd;">No skill entries yet. Add some above!</p>';
+        return;
+      }
+      const grouped = groupEntries(entries);
+      const dates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+
+      const html = dates.map(date => {
+        const skills = grouped[date];
+        const skillChips = Object.entries(skills).map(([skill, hours]) => {
+          const formattedHours = parseFloat(hours.toFixed(2)).toString();
+          const skillClass = skill.toLowerCase(); // Use skill name for class
+          return `<span class="skill-chip">${skill} <span class="hours-badge ${skillClass}">${formattedHours} h</span></span>`;
+        }).join('');
+        return `
+          <div class="entry-group" tabindex="0" aria-label="Skill entries for ${formatDate(date)}">
+            <div class="entry-date">${formatDate(date)}</div>
+            <div class="skills-list">${skillChips}</div>
+          </div>
+        `;
+      }).join('');
+      entriesContainer.innerHTML = html;
+
+      // Update progress chart
+      updateProgressChart(entries);
+    }
+
+    // Update progress chart
+    function updateProgressChart(entries) {
+      const skillHours = { Coding: 0, Designing: 0, Writing: 0 };
+
+      entries.forEach(entry => {
+        skillHours[entry.skill] += entry.hours;
+      });
+
+      const labels = Object.keys(skillHours);
+      const data = Object.values(skillHours);
+
+      const chart = new Chart(progressChart, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Hours Worked',
+            data: data,
+            backgroundColor: ['#4bc0c0', '#ff6384', '#ff9f40'], // Colors for each skill
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: MAX_HOURS_PER_WEEK // Set max limit for the chart
+            }
+          }
+        }
+      });
+    }
+
+    // Set max date for date input to today
+    function setMaxDateToToday() {
+      const today = new Date().toISOString().split('T')[0];
+      dateInput.max = today;
+    }
+
+    // Clear error message
+    function clearError() {
+      errorMsg.textContent = '';
+    }
+
+    // Display error message
+    function showError(msg) {
+      errorMsg.textContent = msg;
+    }
+
+    // Login form submit handler
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = userNameInput.value.trim();
+      if (name.length === 0) {
+        alert('Please enter your name to login.');
+        return;
+      }
+      currentUser      = name;
+      loginSection.classList.add('hidden');
+      trackerSection.classList.remove('hidden');
+      welcomeMsg.textContent = `Welcome, ${currentUser     }!`;
+      setMaxDateToToday();
+      setDefaultDate();
+      renderEntries();
+      clearError();
+      // Reset skill form
+      skillForm.reset();
+    });
+
+    // Skill form submit handler
+    skillForm.addEventListener('submit', e => {
+      e.preventDefault();
+      clearError();
+
+      const dateVal = dateInput.value;
+      const skillVal = categorySelect.value;
+      const hoursValRaw = hoursInput.value.trim();
+      const hoursVal = Number(hoursValRaw);
+
+      if (!dateVal || !skillVal || hoursValRaw === "") {
+        showError('Please fill out the date, skill category, and hours worked.');
+        return;
+      }
+
+      // Check no future date (though max attribute enforces mostly)
+      const today = new Date();
+      const inputDate = new Date(dateVal + 'T00:00:00');
+      if (inputDate > today) {
+        showError('Future dates are not allowed.');
+        return;
+      }
+
+      if (isNaN(hoursVal) || hoursVal < 1) {
+        showError('Please enter a valid number of hours (minimum 1 hour).');
+        return;
+      }
+      if (hoursVal > MAX_HOURS_PER_DAY) {
+        showError(`You cannot work more than ${MAX_HOURS_PER_DAY} hours on any single skill entry.`);
+        return;
+      }
+
+      // Load current entries
+      const entries = loadEntries();
+
+      // Calculate total hours for input date so far
+      const totalHoursOnDate = entries
+        .filter(e => e.date === dateVal)
+        .reduce((sum, e) => sum + e.hours, 0);
+
+      if (totalHoursOnDate + hoursVal > MAX_HOURS_PER_DAY) {
+        showError(`Total hours for ${formatDate(dateVal)} exceed ${MAX_HOURS_PER_DAY} hours.`);
+        return;
+      }
+
+      // Add new entry
+      entries.push({ date: dateVal, skill: skillVal, hours: hoursVal });
+
+      // Check total hours for the week
+      const totalHoursThisWeek = entries
+        .filter(e => {
+          const entryDate = new Date(e.date);
+          const today = new Date();
+          const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
+          return entryDate >= weekStart && entryDate <= new Date();
+        })
+        .reduce((sum, e) => sum + e.hours, 0);
+
+      if (totalHoursThisWeek < MIN_HOURS_PER_WEEK || totalHoursThisWeek > MAX_HOURS_PER_WEEK) {
+        showError(`Total hours for the week must be between ${MIN_HOURS_PER_WEEK} and ${MAX_HOURS_PER_WEEK} hours.`);
+        return;
+      }
+
+      // Check for milestone
+      if (totalHoursThisWeek >= MILESTONE_HOURS) {
+        alert(`Congratulations! You've reached ${MILESTONE_HOURS} hours this week in ${skillVal}. Keep it up!`);
+      }
+
+      // Save entries
+      saveEntries(entries);
+
+      // Reset form and set date default
+      skillForm.reset();
+      setDefaultDate();
+
+      // Refresh dashboard
+      renderEntries();
+    });
+
+    // Logout handler
+    logoutBtn.addEventListener('click', () => {
+      currentUser      = null;
+      loginSection.classList.remove('hidden');
+      trackerSection.classList.add('hidden');
+      userNameInput.value = '';
+      clearError();
+      entriesContainer.innerHTML = '<p style="text-align:center; color:#ddd;">No skill entries yet. Add some above!</p>';
+    });
+
+    function setDefaultDate() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      dateInput.value = todayStr;
+    }
+
+  })();
+</script>
+</body>
+</html>
+
